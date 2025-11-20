@@ -18,7 +18,7 @@ verifyBtn.addEventListener("click", async () => {
   if (!email) { setStatus("Enter a valid email", false); return; }
   setStatus("Verifying...");
   try {
-    const res = await fetch(API_BASE + "?email=" + encodeURIComponent(email), { method: "GET" });
+    const res = await fetch(API_BASE + "?email=" + encodeURIComponent(email), { method: "GET", mode:"cors",cache:"no-cache" });
     if (!res.ok) {
       setStatus("Server error: " + res.status, false);
       return;
