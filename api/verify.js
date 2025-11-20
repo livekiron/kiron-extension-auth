@@ -1,19 +1,22 @@
 export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
   const { email } = req.query;
 
-  const allowedListUrl = "https://raw.githubusercontent.com/livekiron/kiron-extension-auth/main/allowed.json";
+  const allowedURL =
+    "https://raw.githubusercontent.com/livekiron/kiron-extension-auth/main/allowed.json";
 
   try {
-    const response = await fetch(allowedListUrl);
+    const response = await fetch(allowedURL);
     const data = await response.json();
 
     if (data.allowed.includes(email)) {
-      return res.status(200).json({ status: "allowed" });
+      res.status(200).json({ access: true, message: "Access Granted" });
     } else {
-      return res.status(200).json({ status: "denied" });
+      res.status(200).json({ access: false, message: "Access Denied" });
     }
-
   } catch (error) {
-    return res.status(500).json({ error: "Server error", details: error.message });
+    res.status(500).json({ error: "Server Error" });
   }
 }
