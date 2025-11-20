@@ -1,26 +1,40 @@
-import allowed from "../../allowed.json";
+// api/verify.js (Vercel Serverless - Node)
+import fetch from 'node-fetch';
 
-export default function handler(req, res) {
-  const { email } = req.query;
+const RAW_ALLOWED_URL = "https://raw.githubusercontent.com/<GITHUB_USERNAME>/<REPO_NAME>/main/allowed.json";
+// replace <GITHUB_USERNAME> and <REPO_NAME> accordingly (e.g. livekiron/kiron-extension-auth)
 
+export default async function handler(req, res) {
+  // CORS - allow all origins (chrome-extension fetch allowed)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const email = (req.query.email || '').toString().trim().toLowerCase();
   if (!email) {
-    return res.status(400).json({
-      success: false,
-      message: "Email is required",
-    });
+    return res.status(400).json({ error: 'email required' });
   }
 
-  const isAllowed = allowed.allowed.includes(email);
+  try {
+    const r = await fetch(RAW_ALLOWED_URL, { method: 'GET' });
+    if (!r.ok) {
+      return res.status(500).json({ error: 'failed to fetch allowed list' });
+    }
+    const j = await r.json();
+    const allowedList = Array.isArray(j.allowed) ? j.allowed.map(e => e.toString().toLowerCase()) : [];
 
-  if (isAllowed) {
-    return res.status(200).json({
-      success: true,
-      allowed: true,
-    });
+    const allowed = allowedList.includes(email);
+    if (allowed) {
+      return res.status(200).json({ status: "allowed", email });
+    } else {
+      return res.status(200).json({ status: "denied", email });
+    }
+  } catch (err) {
+    console.error('verify error', err);
+    return res.status(500).json({ error: 'internal error' });
   }
-
-  return res.status(403).json({
-    success: false,
-    allowed: false,
-  });
 }
