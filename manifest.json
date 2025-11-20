@@ -16,7 +16,7 @@
     "default_icon": "icon48.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "service_worker.js"
   },
   "icons": {
     "48": "icon48.png"
