@@ -1,8 +1,7 @@
-import allowed from "../../../allowed.json";
+import allowed from "../../allowed.json";
 
 export default function handler(req, res) {
-  
-  // CORS FIX
+  // CORS Fix
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -24,11 +23,13 @@ export default function handler(req, res) {
 
   if (isAllowed) {
     return res.status(200).json({
-      status: "allowed",
+      success: true,
+      allowed: true,
     });
   }
 
   return res.status(403).json({
-    status: "denied",
+    success: false,
+    allowed: false,
   });
 }
