@@ -1,56 +1,43 @@
-// ====== configure this ======
-const API_BASE = "https://kiron-extension-auth.vercel.app/api/auth/verify";
-// ============================
-document.getElementById('serverUrl').textContent = API_BASE.replace('/api/auth/verify','');
+document.getElementById("verifyBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
 
-const emailInput = document.getElementById("email");
-const verifyBtn = document.getElementById("verify");
-const injectBtn = document.getElementById("inject");
-const status = document.getElementById("status");
+  if (!email) {
+    alert("Please enter your email");
+    return;
+  }
 
-function setStatus(txt, ok) {
-  status.textContent = txt;
-  status.className = ok === true ? "ok" : ok === false ? "err" : "";
-}
-
-verifyBtn.addEventListener("click", async () => {
-  const email = emailInput.value.trim();
-  if (!email) { setStatus("Enter a valid email", false); return; }
-  setStatus("Verifying...");
   try {
-    const res = await fetch(API_BASE + "?email=" + encodeURIComponent(email), { method: "GET" });
-    if (!res.ok) {
-      setStatus("Server error: " + res.status, false);
-      return;
-    }
-    const j = await res.json();
-    const allowed = j.status === "allowed" || j.allowed === true;
-    if (allowed) {
-      await chrome.storage.local.set({ authorizedEmail: email });
-      setStatus("Access granted ✅ (" + email + ")", true);
+    const res = await fetch(https://YOUR_DOMAIN/api/auth/verify?email=${email});
+    const data = await res.json();
+
+    if (data.allowed) {
+      alert("Email verified ✓");
+
+      chrome.runtime.sendMessage({ action: "setVerified" });
+
     } else {
-      await chrome.storage.local.remove("authorizedEmail");
-      setStatus("Access denied ✖", false);
+      alert("Not allowed");
     }
-  } catch (e) {
-    console.error(e);
-    setStatus("Server/network error", false);
+  } catch (err) {
+    alert("Server error");
   }
 });
 
-injectBtn.addEventListener("click", async () => {
-  const s = await chrome.storage.local.get(["authorizedEmail"]);
-  if (!s.authorizedEmail) {
-    setStatus("Not authorized. Verify your email first.", false);
-    return;
-  }
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab) { setStatus("No active tab", false); return; }
-  try {
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content_script.js"] });
-    setStatus("Script injected ✅", true);
-  } catch (err) {
-    console.error(err);
-    setStatus("Injection failed", false);
-  }
+
+document.getElementById("injectBtn").addEventListener("click", () => {
+  chrome.runtime.sendMessage({ action: "isVerified" }, (resp) => {
+    if (!resp.verified) {
+      alert("You must verify email first!");
+      return;
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["content.js"]
+      });
+    });
+
+    alert("Script Injected ✓");
+  });
 });
