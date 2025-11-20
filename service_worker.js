@@ -1,4 +1,4 @@
-const API_URL = "https://kiron-extension-auth.vercel.app/api/verify";
+const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify";
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "verifyEmail") {
@@ -23,4 +23,5 @@ async function verifyEmail(email) {
     } catch (err) {
         return { success: false, message: "Server Error" };
     }
+
 }
