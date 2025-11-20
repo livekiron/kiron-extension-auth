@@ -1,12 +1,13 @@
-import allowed from "../../../allowed.json";
+import allowed from "../../allowed.json";
 
 export default function handler(req, res) {
+  // CORS Fix
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    return res.status(200).end();
   }
 
   const { email } = req.query;
@@ -14,23 +15,21 @@ export default function handler(req, res) {
   if (!email) {
     return res.status(400).json({
       success: false,
-      message: "Email is required"
+      message: "Email is required",
     });
   }
 
-  const ok = allowed.allowed.includes(email);
+  const isAllowed = allowed.allowed.includes(email);
 
-  if (ok) {
+  if (isAllowed) {
     return res.status(200).json({
       success: true,
       allowed: true,
-      status: "allowed"
     });
   }
 
   return res.status(403).json({
     success: false,
     allowed: false,
-    status: "denied"
   });
 }
