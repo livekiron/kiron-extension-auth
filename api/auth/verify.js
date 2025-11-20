@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import allowedData from "../../allowed.json";
 
 export default function handler(req, res) {
   // CORS Fix
@@ -11,11 +10,6 @@ export default function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Load allowed.json properly
-  const filePath = path.join(process.cwd(), "allowed.json");
-  const fileContents = fs.readFileSync(filePath, "utf8");
-  const allowed = JSON.parse(fileContents).allowed;
-
   const { email } = req.query;
 
   if (!email) {
@@ -25,6 +19,7 @@ export default function handler(req, res) {
     });
   }
 
+  const allowed = allowedData.allowed;
   const isAllowed = allowed.includes(email);
 
   if (isAllowed) {
