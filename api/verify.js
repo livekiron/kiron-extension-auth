@@ -1,9 +1,20 @@
 export default async function handler(req, res) {
+  // CORS FIX
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
   const { email } = req.query;
 
+  if (!email) {
+    return res.status(400).json({ error: "Email missing!" });
+  }
+
+  // Allowed list JSON from GitHub raw link
   const allowedURL =
     "https://raw.githubusercontent.com/livekiron/kiron-extension-auth/main/allowed.json";
 
@@ -12,11 +23,20 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.allowed.includes(email)) {
-      res.status(200).json({ access: true, message: "Access Granted" });
+      return res.status(200).json({
+        access: true,
+        message: "Access Granted",
+      });
     } else {
-      res.status(200).json({ access: false, message: "Access Denied" });
+      return res.status(200).json({
+        access: false,
+        message: "Access Denied",
+      });
     }
   } catch (error) {
-    res.status(500).json({ error: "Server Error" });
+    return res.status(500).json({
+      error: "Server Error",
+      details: error.toString(),
+    });
   }
 }
