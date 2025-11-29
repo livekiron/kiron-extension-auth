@@ -1,8 +1,3 @@
 {
-  "locks": [
-    {
-      "email": "srship2026@gmail.com",
-      "deviceId": "some-unique-id"
-    }
-  ]
+  "devices": {}
 }
