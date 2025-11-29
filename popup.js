@@ -1,5 +1,5 @@
 // ========== CONFIG =============
-const API_BASE = "https://kiron-extension-auth.vercel.app/api/auth/verify";
+const API_BASE = "https://kiron-boq-auth.vercel.app/pages/api/auth/verify";
 // ===============================
 
 // HTML Elements
