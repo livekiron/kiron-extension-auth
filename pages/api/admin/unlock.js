@@ -17,9 +17,7 @@ export default function handler(req, res) {
   }
 
   const { email } = req.body || {};
-  if (!email) {
-    return res.status(400).json({ success: false, message: "Email required" });
-  }
+  if (!email) return res.status(400).json({ success: false, message: "Email required" });
 
   const dbPath = path.join(process.cwd(), "database.json");
   let db = { devices: {} };
@@ -34,9 +32,8 @@ export default function handler(req, res) {
     return res.status(404).json({ success: false, message: "Not found" });
   }
 
-  // remove device lock for this email
   delete db.devices[email];
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
-  return res.status(200).json({ success: true, message: "Device unlocked/removed for " + email });
+  return res.status(200).json({ success: true, message: "Device unlocked for " + email });
 }
