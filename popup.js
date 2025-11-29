@@ -1,5 +1,5 @@
 // ====== configure this ======
-const API_BASE = "https://kiron-extension-auth.vercel.app/api/auth/verify";
+const API_BASE = "https://kiron-extension-auth.vercel.app/pages/api/auth/verify";
 // ============================
 document.getElementById('serverUrl').textContent = API_BASE.replace('/api/auth/verify','');
 
