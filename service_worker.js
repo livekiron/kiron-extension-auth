@@ -1,12 +1,17 @@
-let isVerified = false;
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  
   if (msg.action === "setVerified") {
-    isVerified = true;
-    sendResponse({ success: true });
+    chrome.storage.local.set({ verified: true }, () => {
+      sendResponse({ success: true });
+    });
+    return true;
   }
 
   if (msg.action === "isVerified") {
-    sendResponse({ verified: isVerified });
+    chrome.storage.local.get(["verified"], (data) => {
+      sendResponse({ verified: data.verified === true });
+    });
+    return true;
   }
+
 });
