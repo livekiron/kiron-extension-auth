@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Admin — Device Manager</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:16px;max-width:900px;margin:auto}
+    input,button{padding:8px;margin:4px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:8px;border:1px solid #ddd;text-align:left}
+    .danger{color:#c00}
+  </style>
+</head>
+<body>
+  <h2>Admin Panel — Device Locks</h2>
+  <div>
+    <label>Admin Token: <input id="token" type="password" placeholder="Bearer token" style="width:360px" /></label>
+    <button id="loginBtn">Load devices</button>
+  </div>
+
+  <div id="status"></div>
+
+  <table id="devicesTable" style="display:none">
+    <thead>
+      <tr><th>Email</th><th>DeviceId</th><th>First Verified</th><th>Last Seen</th><th>IP</th><th>Action</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const API_BASE = ""; // e.g. https://your-deploy-domain.com
+    const loginBtn = document.getElementById('loginBtn');
+    const tokenInput = document.getElementById('token');
+    const statusEl = document.getElementById('status');
+    const table = document.getElementById('devicesTable');
+    const tbody = table.querySelector('tbody');
+
+    function setStatus(t, ok) {
+      statusEl.textContent = t;
+      statusEl.style.color = ok ? 'green' : 'red';
+    }
+
+    loginBtn.onclick = async () => {
+      const token = tokenInput.value.trim();
+      if (!token) { setStatus('Enter admin token', false); return; }
+      setStatus('Loading...', true);
+      try {
+        const res = await fetch(API_BASE + '/api/admin/list', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const j = await res.json();
+        if (!j.success) {
+          setStatus('Error: ' + (j.message || res.status), false);
+          return;
+        }
+        const devices = j.devices || {};
+        tbody.innerHTML = '';
+        const emails = Object.keys(devices);
+        if (emails.length === 0) {
+          setStatus('No device locks found', true);
+          table.style.display = 'none';
+          return;
+        }
+        table.style.display = '';
+        emails.forEach(email => {
+          const d = devices[email];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${email}</td>
+            <td style="max-width:200px;overflow:auto">${d.deviceId}</td>
+            <td>${d.firstVerifiedAt || ''}</td>
+            <td>${d.lastSeenAt || ''}</td>
+            <td>${d.lastIpSeen || d.ip || ''}</td>
+            <td><button data-email="${email}">Unlock</button></td>`;
+          tbody.appendChild(tr);
+        });
+
+        setStatus('Loaded ' + emails.length + ' entries', true);
+
+        // attach unlock handlers
+        tbody.querySelectorAll('button').forEach(btn => {
+          btn.onclick = async () => {
+            const email = btn.dataset.email;
+            if (!confirm('Unlock (remove device lock) for ' + email + '?')) return;
+            setStatus('Unlocking ' + email + ' ...', true);
+            try {
+              const r2 = await fetch(API_BASE + '/api/admin/unlock', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + token,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+              });
+              const j2 = await r2.json();
+              if (j2.success) {
+                setStatus('Unlocked ' + email, true);
+                // refresh list
+                btn.parentElement.parentElement.remove();
+              } else {
+                setStatus('Failed: ' + (j2.message || r2.status), false);
+              }
+            } catch (e) {
+              setStatus('Network error', false);
+            }
+          };
+        });
+
+      } catch (e) {
+        setStatus('Network/server error', false);
+      }
+    };
+  </script>
+</body>
+</html>
