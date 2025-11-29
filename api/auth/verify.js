@@ -1,58 +1,42 @@
-import allowed from "../../allowed.json";
+import allowedData from "../../allowed.json";
 import fs from "fs";
 import path from "path";
 
 export default function handler(req, res) {
-  // CORS:
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  const { email, device } = req.query;
+  if (!email || !device) {
+    return res.status(400).json({ allowed: false, msg: "Missing email/device" });
   }
 
-  const { email, deviceId } = req.query;
-
-  if (!email || !deviceId) {
-    return res.status(400).json({
-      success: false,
-      message: "email & deviceId required"
-    });
-  }
-
-  // Allowed email check
-  const isAllowed = allowed.allowed.includes(email);
-  if (!isAllowed) {
-    return res.status(403).json({
-      success: false,
-      message: "Email not allowed"
-    });
+  const allowedEmails = allowedData.allowed;
+  if (!allowedEmails.includes(email)) {
+    return res.status(403).json({ allowed: false });
   }
 
   const filePath = path.join(process.cwd(), "device_lock.json");
-  const fileData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const db = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-  const existing = fileData.locks.find(x => x.email === email);
-
-  // Already used on another PC?
-  if (existing && existing.deviceId !== deviceId) {
-    return res.status(403).json({
-      success: false,
-      locked: true,
-      message: "This email is already used on another device"
-    });
+  // first time use → save device ID
+  if (!db.devices[email]) {
+    db.devices[email] = device;
+    fs.writeFileSync(filePath, JSON.stringify(db, null, 2));
+    return res.status(200).json({ allowed: true });
   }
 
-  // First time user? Save device
-  if (!existing) {
-    fileData.locks.push({ email, deviceId });
-    fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
+  // same device → allowed
+  if (db.devices[email] === device) {
+    return res.status(200).json({ allowed: true });
   }
 
-  return res.status(200).json({
-    success: true,
-    allowed: true,
-    message: "Access granted"
+  // different device → BLOCK
+  return res.status(403).json({
+    allowed: false,
+    msg: "Different device — Blocked"
   });
 }
