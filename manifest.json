@@ -1,24 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "BOQ Auto Fill (Protected - Full)",
-  "version": "1.1",
-  "description": "Auto YES & -5 for e-GP (requires email verification)",
+  "name": "BOQ Tool Protected",
+  "version": "1.0",
+  "description": "Email verification system for BOQ Tool",
+
   "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
+    "storage"
   ],
+
   "host_permissions": [
-    "https://www.eprocure.gov.bd/*"
+    "https://kiron-extension-auth.vercel.app/*"
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon48.png"
-  },
+
   "background": {
     "service_worker": "service_worker.js"
   },
-  "icons": {
-    "48": "icon48.png"
+
+  "action": {
+    "default_popup": "popup.html"
   }
 }
