@@ -1,17 +1,9 @@
+import allowed from "../../allowed.json";
 import fs from "fs";
 import path from "path";
 
-const allowedData = require("../../allowed.json");
-
-// Save DB file (device lock)
-const dbPath = path.join(process.cwd(), "device_lock.json");
-
-// If file not exists create empty object
-if (!fs.existsSync(dbPath)) {
-  fs.writeFileSync(dbPath, JSON.stringify({}), "utf8");
-}
-
 export default function handler(req, res) {
+  // CORS:
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -25,40 +17,42 @@ export default function handler(req, res) {
   if (!email || !deviceId) {
     return res.status(400).json({
       success: false,
-      message: "Email & Device ID required",
+      message: "email & deviceId required"
     });
   }
 
-  const allowed = allowedData.allowed;
-  const isAllowed = allowed.includes(email);
-
+  // Allowed email check
+  const isAllowed = allowed.allowed.includes(email);
   if (!isAllowed) {
     return res.status(403).json({
       success: false,
-      allowed: false,
-      message: "Email not allowed",
+      message: "Email not allowed"
     });
   }
 
-  // LOAD DB
-  const db = JSON.parse(fs.readFileSync(dbPath, "utf8"));
+  const filePath = path.join(process.cwd(), "device_lock.json");
+  const fileData = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-  // If user already registered from another device → Block
-  if (db[email] && db[email] !== deviceId) {
+  const existing = fileData.locks.find(x => x.email === email);
+
+  // Already used on another PC?
+  if (existing && existing.deviceId !== deviceId) {
     return res.status(403).json({
       success: false,
-      allowed: false,
-      message: "This email is already used on another device!",
+      locked: true,
+      message: "This email is already used on another device"
     });
   }
 
-  // Save new device ID (first time only)
-  db[email] = deviceId;
-  fs.writeFileSync(dbPath, JSON.stringify(db), "utf8");
+  // First time user? Save device
+  if (!existing) {
+    fileData.locks.push({ email, deviceId });
+    fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
+  }
 
   return res.status(200).json({
     success: true,
     allowed: true,
-    message: "Verified on your device",
+    message: "Access granted"
   });
 }
