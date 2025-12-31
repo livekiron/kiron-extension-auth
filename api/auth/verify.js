@@ -1,10 +1,10 @@
 import { createClient } from "@vercel/kv";
 import allowedData from "../../allowed.json";
 
-// আপনার স্ক্রিনশটে থাকা ভেরিয়েবল ব্যবহার করে কানেক্ট করা
+// সরাসরি Environment Variables থেকে ডাটা নেবে
 const kv = createClient({
-  url: process.env.KV_REDIS_URL || process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN || "", // যদি টোকেন না থাকে তবে এটি কাজ নাও করতে পারে
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
 });
 
 export default async function handler(req, res) {
@@ -14,16 +14,8 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // ডিবাগ চেক: কোন ভেরিয়েবল পাওয়া যাচ্ছে তা দেখা
-  if (!process.env.KV_REDIS_URL && !process.env.KV_REST_API_URL) {
-    return res.status(500).json({ 
-      allowed: false, 
-      message: "Database URL missing! দয়া করে Storage এ গিয়ে পুনরায় কানেক্ট করুন।" 
-    });
-  }
-
   const { email, machineId } = req.query;
-  if (!email || !machineId) return res.status(400).json({ allowed: false, message: "Email and MachineId required" });
+  if (!email || !machineId) return res.status(400).json({ allowed: false, message: "Data missing" });
 
   const isWhitelisted = allowedData.allowed.some(e => e.toLowerCase() === email.toLowerCase());
   if (!isWhitelisted) return res.status(403).json({ allowed: false, message: "ইমেইলটি অনুমোদিত নয়!" });
@@ -34,7 +26,7 @@ export default async function handler(req, res) {
 
     if (!storedId) {
       await kv.set(key, machineId);
-      return res.status(200).json({ allowed: true, message: "এই পিসির জন্য লক করা হলো! ✅" });
+      return res.status(200).json({ allowed: true, message: "সফল! এই পিসির জন্য লক করা হলো। ✅" });
     }
 
     if (storedId === machineId) {
