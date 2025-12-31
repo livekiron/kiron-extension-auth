@@ -1,4 +1,4 @@
-const API_URL = "https://your-vercel-project.vercel.app/api/auth/verify"; // আপনার Vercel URL দিন
+const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify"; // আপনার Vercel URL দিন
 
 // পিসির জন্য ইউনিক আইডি তৈরি বা উদ্ধার করা
 async function getMachineId() {
