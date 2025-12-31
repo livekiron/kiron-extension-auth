@@ -1,6 +1,6 @@
-// আপনার আসল Vercel URL এখানে বসান
 const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify";
 
+// পিসির জন্য ইউনিক আইডি
 async function getMachineId() {
     let data = await chrome.storage.local.get("machineId");
     if (!data.machineId) {
@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function verifyWithLock(email) {
     try {
         const machineId = await getMachineId();
-        // encodeURIComponent ব্যবহার করা হয়েছে যাতে ইমেইলের '+' চিহ্ন সমস্যা না করে
+        // এই লাইনটি ভালো করে দেখুন
         const res = await fetch(`${API_URL}?email=${encodeURIComponent(email)}&machineId=${machineId}`);
         const data = await res.json();
 
@@ -29,18 +29,10 @@ async function verifyWithLock(email) {
             await chrome.storage.local.set({ authorizedEmail: email });
             return { success: true, message: data.message };
         } else {
-            await chrome.storage.local.remove("authorizedEmail");
             return { success: false, message: data.message };
         }
     } catch (err) {
         console.error(err);
-        return { success: false, message: "সার্ভার কানেকশন এরর! লিঙ্ক চেক করুন।" };
+        return { success: false, message: "Server Error Connection" };
     }
 }
-
-// অটো স্ক্রিপ্ট ইনজেকশন
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === "complete" && tab.url?.includes("eprocure.gov.bd")) {
-        chrome.scripting.executeScript({ target: { tabId }, files: ["content_script.js"] }).catch(() => {});
-    }
-});
