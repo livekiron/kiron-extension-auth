@@ -1,5 +1,11 @@
-import { kv } from "@vercel/kv";
+import { createClient } from "@vercel/kv";
 import allowedData from "../../allowed.json";
+
+// ম্যানুয়ালি ডাটাবেস কানেক্ট করা
+const kv = createClient({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,18 +26,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ডাটাবেস থেকে তথ্য আনা
     const key = `user_device:${email.toLowerCase()}`;
     
-    // সরাসরি kv কল করার আগে চেক
-    const storedId = await kv.get(key).catch(err => {
-        console.error("Redis Get Error:", err);
-        throw new Error("Database Connection Failed");
-    });
+    // ডাটাবেস চেক
+    const storedId = await kv.get(key);
 
     if (!storedId) {
       await kv.set(key, machineId);
-      return res.status(200).json({ allowed: true, message: "পিসি লক সফল হয়েছে! ✅" });
+      return res.status(200).json({ allowed: true, message: "এই পিসির জন্য লক করা হলো! ✅" });
     }
 
     if (storedId === machineId) {
@@ -40,8 +42,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ allowed: false, message: "অন্য পিসিতে লক করা। ❌" });
     }
   } catch (e) {
-    // এখানে আসল এররটি প্রিন্ট হবে Vercel Logs এ
-    console.error("Final Error Object:", e);
-    return res.status(500).json({ allowed: false, message: "ডাটাবেস কানেক্ট হচ্ছে না!" });
+    console.error("Redis Error:", e);
+    return res.status(500).json({ allowed: false, message: "ডাটাবেস কানেকশন এরর!" });
   }
 }
