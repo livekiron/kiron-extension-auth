@@ -8,22 +8,15 @@ const kv = createClient({
 });
 
 export default async function handler(req, res) {
-  // CORS Headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // ভেরিয়েবল চেক
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-    return res.status(500).json({ allowed: false, message: "Server configuration error: Missing KV variables." });
-  }
-
   const { email, machineId } = req.query;
-  if (!email || !machineId) return res.status(400).json({ allowed: false, message: "Email and MachineId required" });
+  if (!email || !machineId) return res.status(400).json({ allowed: false, message: "Data missing" });
 
-  // হোয়াইটলিস্ট চেক
   const isWhitelisted = allowedData.allowed.some(e => e.toLowerCase() === email.toLowerCase());
   if (!isWhitelisted) return res.status(403).json({ allowed: false, message: "ইমেইলটি অনুমোদিত নয়!" });
 
@@ -42,7 +35,6 @@ export default async function handler(req, res) {
       return res.status(403).json({ allowed: false, message: "অন্য পিসিতে লক করা। ❌" });
     }
   } catch (e) {
-    console.error("Redis Error:", e);
-    return res.status(500).json({ allowed: false, message: "Database Connection Failed: " + e.message });
+    return res.status(500).json({ allowed: false, message: "Database Error: " + e.message });
   }
 }
