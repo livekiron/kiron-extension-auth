@@ -1,6 +1,6 @@
-const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify"; // আপনার Vercel URL দিন
+// আপনার আসল Vercel URL এখানে বসান
+const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify"; 
 
-// পিসির জন্য ইউনিক আইডি তৈরি বা উদ্ধার করা
 async function getMachineId() {
     let data = await chrome.storage.local.get("machineId");
     if (!data.machineId) {
@@ -11,7 +11,6 @@ async function getMachineId() {
     return data.machineId;
 }
 
-// মেসেজ লিসেনার (পপআপ থেকে কল আসবে)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "verifyEmail") {
         verifyWithLock(request.email).then(sendResponse);
@@ -19,10 +18,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// ভেরিফিকেশন ফাংশন
 async function verifyWithLock(email) {
     try {
         const machineId = await getMachineId();
+        // encodeURIComponent ব্যবহার করা হয়েছে যাতে ইমেইলের '+' চিহ্ন সমস্যা না করে
         const res = await fetch(`${API_URL}?email=${encodeURIComponent(email)}&machineId=${machineId}`);
         const data = await res.json();
 
@@ -34,11 +33,12 @@ async function verifyWithLock(email) {
             return { success: false, message: data.message };
         }
     } catch (err) {
-        return { success: false, message: "Server Error Connection" };
+        console.error(err);
+        return { success: false, message: "সার্ভার কানেকশন এরর! লিঙ্ক চেক করুন।" };
     }
 }
 
-// অটো-ইনজেকশন লজিক
+// অটো স্ক্রিপ্ট ইনজেকশন
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url?.includes("eprocure.gov.bd")) {
         chrome.scripting.executeScript({ target: { tabId }, files: ["content_script.js"] }).catch(() => {});
