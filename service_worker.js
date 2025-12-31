@@ -1,5 +1,5 @@
 // আপনার আসল Vercel URL এখানে বসান
-const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify"; 
+const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify";
 
 async function getMachineId() {
     let data = await chrome.storage.local.get("machineId");
