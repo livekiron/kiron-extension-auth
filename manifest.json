@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "BOQ 1 click Auto fill for one PC",
+  "version": "1.1",
+  "description": "Auto YES & -5 for e-GP (requires email verification)",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.eprocure.gov.bd/*",
+        "http://www.eprocure.gov.bd/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon256.png"
+  },
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "icons": {
+    "256": "icon256.png"
+  }
+}
