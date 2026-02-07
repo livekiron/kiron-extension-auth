@@ -1,4 +1,5 @@
 // Your live API URL
+
 const API_BASE = "https://kiron-extension-auth.vercel.app/api/auth/verify";
 
 // Listen when popup or content script sends email
@@ -26,5 +27,6 @@ async function verifyEmail(email) {
     } catch (err) {
         return { success: false, message: "Server Error" };
     }
-
 }
+
+
