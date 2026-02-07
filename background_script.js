@@ -1,5 +1,5 @@
 // Your live API URL
-const API_URL = "https://kiron-extension-auth.vercel.app/api/auth/verify";
+const API_BASE = "https://kiron-extension-auth.vercel.app/api/auth/verify";
 
 // Listen when popup or content script sends email
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -26,4 +26,5 @@ async function verifyEmail(email) {
     } catch (err) {
         return { success: false, message: "Server Error" };
     }
+
 }
